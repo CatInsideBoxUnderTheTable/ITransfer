@@ -5,7 +5,7 @@ variable "aws_region" {
 
 variable "environment_name" {
   type = string
-  default = "testEnv"
+  default = "testenv"
 }
 
 variable "default_tags" {
@@ -14,5 +14,9 @@ variable "default_tags" {
     Owner       = "CatInsideBoxUnderTheTable"
     Environment = "Test"
   }
+}
+
+variable "email_notification_subscriber" {
+  type = string
 }
 
