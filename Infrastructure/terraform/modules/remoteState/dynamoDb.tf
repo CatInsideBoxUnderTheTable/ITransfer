@@ -1,8 +1,7 @@
 resource "aws_dynamodb_table" "terraform_dynamodb_state_locks" {
   name         = var.state_dynamoDb_table_name
+  billing_mode = "PAY_PER_REQUEST"
   hash_key     = "LockID"
-  read_capacity = 5
-  write_capacity = 5
 
   attribute {
     name = "LockID"
