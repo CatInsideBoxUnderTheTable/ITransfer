@@ -1,5 +1,5 @@
 # after you create bucket by hand you will need to import it
-# 'import module.remote_state.aws_s3_bucket.terraform_state_bucket "terraform-remote-management-catinsideboxunderthetable-testenv"'
+# SAMPLE: 'import module.remote_state.aws_s3_bucket.terraform_state_bucket "terraform-remote-management-catinsideboxunderthetable-testenv"'
 resource "aws_s3_bucket" "terraform_state_bucket" {
   bucket        = var.state_bucket_name
   force_destroy = true

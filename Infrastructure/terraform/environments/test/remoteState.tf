@@ -5,5 +5,5 @@ module "remote_state" {
   default_tags = var.default_tags
 
   state_bucket_name         = "terraform-remote-management-catinsideboxunderthetable-testenv"
-  state_dynamoDb_table_name = "terraform-remote-management"
+  state_dynamoDb_table_name = "terraform-remote-management-testenv"
 }

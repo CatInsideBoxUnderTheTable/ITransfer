@@ -1,10 +1,10 @@
 variable "aws_region" {
-  type = string
+  type    = string
   default = "eu-central-1"
 }
 
 variable "environment_name" {
-  type = string
+  type    = string
   default = "testenv"
 }
 
@@ -12,7 +12,8 @@ variable "default_tags" {
   type = map(string)
   default = {
     Owner       = "CatInsideBoxUnderTheTable"
-    Environment = "Test"
+    Environment = "TestEnv"
+    ManagedBy   = "Terraform"
   }
 }
 
