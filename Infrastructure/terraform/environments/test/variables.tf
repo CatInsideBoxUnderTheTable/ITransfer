@@ -21,3 +21,4 @@ variable "email_notification_subscriber" {
   type = string
 }
 
+A

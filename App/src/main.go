@@ -1,19 +1,27 @@
 package main
 
 import (
-	"github.com/aws/aws-sdk-go/service/s3/App/src/database/aws/adapters"
-	"github.com/aws/aws-sdk-go/service/s3/App/src/database/aws/models"
+	aws "github.com/aws/aws-sdk-go/service/s3/App/src/dataLayer/aws"
+	domain "github.com/aws/aws-sdk-go/service/s3/App/src/domainLayer"
+	presentation "github.com/aws/aws-sdk-go/service/s3/App/src/presentationLayer"
 )
 
 func main() {
-	adapter := adapters.AwsS3Adapter{}
-	awsConnectionData := models.AwsConnectionData{
-		Region:      "eu-central-1",
-		ProfileName: "default",
+	adapter := aws.S3Adapter{
+		ConnectionManager: &aws.FileAuthManager{
+			Region:      "eu-central-1",
+			ProfileName: "default",
+		},
 	}
-	adapter.InitializeSession("testenv-transferred-files-storage", awsConnectionData)
-	adapter.PostObject("/home/pons/kotki.txt", "koteczki.txt")
-	url := adapter.GetObjectUrl("koteczki.txt", 1)
+	rawInput := presentation.ReadInputFromConsole()
+	domainInput := domain.UploadFileData{
+		ObjectLifeTimeInHours: *rawInput.ObjectLifeTimeInHours,
+		FileName:              *rawInput.FileName,
+		FilePath:              *rawInput.FilePath,
+	}
 
-	println(url)
+	proccessor := domain.RequestProcessor{Uploader: &adapter}
+	var result = proccessor.UploadFileAndGenerateTemporaryLink(domainInput)
+
+	println(result)
 }
