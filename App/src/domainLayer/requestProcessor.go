@@ -7,7 +7,7 @@ type RequestProcessor struct {
 }
 
 func (this *RequestProcessor) UploadFileAndGenerateTemporaryLink(requestData UploadFileData) string {
-	this.Uploader.InitializeSession("testenv-transferred-files-storage")
+	this.Uploader.InitializeSession(requestData.BucketName)
 	this.Uploader.PostObject(requestData.FilePath, requestData.FileName)
 
 	return this.Uploader.GetObjectUrl(requestData.FileName, requestData.ObjectLifeTimeInHours)

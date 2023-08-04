@@ -20,5 +20,3 @@ variable "default_tags" {
 variable "email_notification_subscriber" {
   type = string
 }
-
-A

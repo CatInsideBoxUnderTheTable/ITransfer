@@ -1,23 +1,25 @@
 package main
 
 import (
-	aws "github.com/aws/aws-sdk-go/service/s3/App/src/dataLayer/aws"
+	"github.com/aws/aws-sdk-go/service/s3/App/src/dataLayer/aws"
 	domain "github.com/aws/aws-sdk-go/service/s3/App/src/domainLayer"
 	presentation "github.com/aws/aws-sdk-go/service/s3/App/src/presentationLayer"
 )
 
 func main() {
+	rawInput := presentation.GetUserConfig()
+
 	adapter := aws.S3Adapter{
 		ConnectionManager: &aws.FileAuthManager{
-			Region:      "eu-central-1",
-			ProfileName: "default",
+			Region:      *rawInput.UserEnvInput.BucketRegion,
+			ProfileName: *rawInput.UserEnvInput.AuthFileProfile,
 		},
 	}
-	rawInput := presentation.ReadInputFromConsole()
 	domainInput := domain.UploadFileData{
-		ObjectLifeTimeInHours: *rawInput.ObjectLifeTimeInHours,
-		FileName:              *rawInput.FileName,
-		FilePath:              *rawInput.FilePath,
+		ObjectLifeTimeInHours: *rawInput.UserConsoleInput.ObjectLifeTimeInHours,
+		FileName:              *rawInput.UserConsoleInput.FileName,
+		FilePath:              *rawInput.UserConsoleInput.FilePath,
+		BucketName:            *rawInput.UserEnvInput.BucketName,
 	}
 
 	proccessor := domain.RequestProcessor{Uploader: &adapter}

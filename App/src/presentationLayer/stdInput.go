@@ -3,12 +3,23 @@ package presentation
 import (
 	"flag"
 	"fmt"
+	"os"
+
 	presentationModels "github.com/aws/aws-sdk-go/service/s3/App/src/presentationLayer/models"
 	"github.com/aws/aws-sdk-go/service/s3/App/src/utils"
-	"os"
 )
 
-func ReadInputFromConsole() presentationModels.UserInput {
+func GetUserConfig() presentationModels.UserInput {
+	consoleInput := readInputFromConsole()
+	envInput := readInputFromEnvironment()
+
+	return presentationModels.UserInput{
+		UserEnvInput:     &envInput,
+		UserConsoleInput: &consoleInput,
+	}
+}
+
+func readInputFromConsole() presentationModels.UserConsoleInput {
 	validateArgsExisting()
 	filePath := os.Args[len(os.Args)-1]
 	validateFilePath(filePath)
@@ -18,13 +29,35 @@ func ReadInputFromConsole() presentationModels.UserInput {
 	lifetime := flag.Uint("l", 2, "Define lifespan of link in hours")
 	flag.Parse()
 
-	validateFileName(*fileName)
+	validateStringNotEmpty(*fileName, "provided filename contains white characters")
 
-	return presentationModels.UserInput{
+	return presentationModels.UserConsoleInput{
 		FilePath:              &filePath,
 		FileName:              fileName,
 		ObjectLifeTimeInHours: lifetime,
 	}
+}
+
+func readInputFromEnvironment() presentationModels.UserEnvInput {
+	bucketName := readEnvironmentVariableAsString("AWS_STORAGE_BUCKET_NAME")
+	bucketRegion := readEnvironmentVariableAsString("AWS_STORAGE_BUCKET_REGION")
+	fileAuthProfile := readEnvironmentVariableAsString("AWS_FILE_AUTH_PROFILE")
+
+	return presentationModels.UserEnvInput{
+		BucketName:      &bucketName,
+		AuthFileProfile: &fileAuthProfile,
+		BucketRegion:    &bucketRegion,
+	}
+}
+func readEnvironmentVariableAsString(envVarName string) string {
+	val, exists := os.LookupEnv(envVarName)
+
+	if !exists {
+		panic(fmt.Sprintf("environment variable '%s' not set", envVarName))
+	}
+	validateStringNotEmpty(val, fmt.Sprintf("environment variable '%s' is empty", envVarName))
+
+	return val
 }
 
 func extractFileNameFromPath(filePath string) string {
@@ -49,10 +82,10 @@ func validateFilePath(filePath string) {
 	}
 }
 
-func validateFileName(fileName string) {
+func validateStringNotEmpty(fileName string, errMessage string) {
 	for _, char := range fileName {
 		if char == ' ' {
-			panic("provided filename contains white characters")
+			panic(errMessage)
 		}
 	}
 }
