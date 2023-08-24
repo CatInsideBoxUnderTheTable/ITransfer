@@ -1,25 +1,47 @@
-package presentation
+package input
 
 import (
 	"flag"
 	"fmt"
+	"github.com/CatInsideBoxUnderTheTable/ITransfer/utils"
 	"os"
-
-	presentationModels "github.com/aws/aws-sdk-go/service/s3/App/src/presentationLayer/models"
-	"github.com/aws/aws-sdk-go/service/s3/App/src/utils"
 )
 
-func GetUserConfig() presentationModels.UserInput {
+type UserInput struct {
+	ObjectLifeTimeInHours uint
+	FilePath              string
+	FileName              string
+	BucketName            string
+	BucketRegion          string
+	AuthFileProfile       string
+}
+type userConsoleInput struct {
+	objectLifeTimeInHours uint
+	filePath              string
+	fileName              string
+}
+
+type userEnvInput struct {
+	bucketName      string
+	bucketRegion    string
+	authFileProfile string
+}
+
+func GetUserConfig() UserInput {
 	consoleInput := readInputFromConsole()
 	envInput := readInputFromEnvironment()
 
-	return presentationModels.UserInput{
-		UserEnvInput:     &envInput,
-		UserConsoleInput: &consoleInput,
+	return UserInput{
+		ObjectLifeTimeInHours: consoleInput.objectLifeTimeInHours,
+		FilePath:              consoleInput.filePath,
+		FileName:              consoleInput.fileName,
+		BucketName:            envInput.bucketName,
+		BucketRegion:          envInput.bucketRegion,
+		AuthFileProfile:       envInput.authFileProfile,
 	}
 }
 
-func readInputFromConsole() presentationModels.UserConsoleInput {
+func readInputFromConsole() userConsoleInput {
 	validateArgsExisting()
 	filePath := os.Args[len(os.Args)-1]
 	validateFilePath(filePath)
@@ -31,24 +53,25 @@ func readInputFromConsole() presentationModels.UserConsoleInput {
 
 	validateStringNotEmpty(*fileName, "provided filename contains white characters")
 
-	return presentationModels.UserConsoleInput{
-		FilePath:              &filePath,
-		FileName:              fileName,
-		ObjectLifeTimeInHours: lifetime,
+	return userConsoleInput{
+		filePath:              filePath,
+		fileName:              *fileName,
+		objectLifeTimeInHours: *lifetime,
 	}
 }
 
-func readInputFromEnvironment() presentationModels.UserEnvInput {
+func readInputFromEnvironment() userEnvInput {
 	bucketName := readEnvironmentVariableAsString("AWS_STORAGE_BUCKET_NAME")
 	bucketRegion := readEnvironmentVariableAsString("AWS_STORAGE_BUCKET_REGION")
 	fileAuthProfile := readEnvironmentVariableAsString("AWS_FILE_AUTH_PROFILE")
 
-	return presentationModels.UserEnvInput{
-		BucketName:      &bucketName,
-		AuthFileProfile: &fileAuthProfile,
-		BucketRegion:    &bucketRegion,
+	return userEnvInput{
+		bucketName:      bucketName,
+		authFileProfile: fileAuthProfile,
+		bucketRegion:    bucketRegion,
 	}
 }
+
 func readEnvironmentVariableAsString(envVarName string) string {
 	val, exists := os.LookupEnv(envVarName)
 

@@ -1,29 +1,34 @@
 package main
 
 import (
-	"github.com/aws/aws-sdk-go/service/s3/App/src/dataLayer/aws"
-	domain "github.com/aws/aws-sdk-go/service/s3/App/src/domainLayer"
-	presentation "github.com/aws/aws-sdk-go/service/s3/App/src/presentationLayer"
+	"github.com/CatInsideBoxUnderTheTable/ITransfer/input"
+	"github.com/CatInsideBoxUnderTheTable/ITransfer/storage"
+	s3storage "github.com/CatInsideBoxUnderTheTable/ITransfer/storage/s3"
 )
 
 func main() {
-	rawInput := presentation.GetUserConfig()
+	rawInput := input.GetUserConfig()
 
-	adapter := aws.S3Adapter{
-		ConnectionManager: &aws.FileAuthManager{
-			Region:      *rawInput.UserEnvInput.BucketRegion,
-			ProfileName: *rawInput.UserEnvInput.AuthFileProfile,
+	s3Adapter := s3storage.S3Adapter{
+		ConnectionManager: s3storage.FileAuthManager{
+			Region:      rawInput.BucketRegion,
+			ProfileName: rawInput.AuthFileProfile,
 		},
 	}
-	domainInput := domain.UploadFileData{
-		ObjectLifeTimeInHours: *rawInput.UserConsoleInput.ObjectLifeTimeInHours,
-		FileName:              *rawInput.UserConsoleInput.FileName,
-		FilePath:              *rawInput.UserConsoleInput.FilePath,
-		BucketName:            *rawInput.UserEnvInput.BucketName,
+	tempUrl, err := uploadObject(rawInput, &s3Adapter)
+
+	if err != nil {
+		panic(err)
 	}
 
-	proccessor := domain.RequestProcessor{Uploader: &adapter}
-	var result = proccessor.UploadFileAndGenerateTemporaryLink(domainInput)
+	println(tempUrl)
+}
 
-	println(result)
+func uploadObject(input input.UserInput, uploader storage.BucketUploader) (string, error) {
+	uploader.InitializeSession(input.BucketName)
+	uploader.PostObject(input.FilePath, input.FileName)
+
+	result := uploader.GetObjectUrl(input.BucketName, input.ObjectLifeTimeInHours)
+
+	return result, nil
 }

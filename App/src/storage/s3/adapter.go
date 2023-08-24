@@ -1,34 +1,33 @@
-package aws
+package storage
 
 import (
 	"fmt"
+	"github.com/CatInsideBoxUnderTheTable/ITransfer/utils"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	dataLayerAbstractions "github.com/aws/aws-sdk-go/service/s3/App/src/dataLayer/abstractions"
-	"github.com/aws/aws-sdk-go/service/s3/App/src/utils"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"time"
 )
 
 type S3Adapter struct {
-	ConnectionManager dataLayerAbstractions.AuthManager
+	ConnectionManager FileAuthManager
 	bucketName        string
 }
 
-func (this *S3Adapter) InitializeSession(bucketName string) {
-	this.ConnectionManager.OpenSession()
-	this.bucketName = bucketName
+func (s *S3Adapter) InitializeSession(bucketName string) {
+	s.ConnectionManager.OpenSession()
+	s.bucketName = bucketName
 }
 
-func (this *S3Adapter) PostObject(filePath string, objectName string) {
+func (s *S3Adapter) PostObject(filePath string, objectName string) {
 	file := utils.ReadFile(filePath)
-	conn := convertAnyToAwsSession(this.ConnectionManager.GetExistingSession())
+	conn := convertAnyToAwsSession(s.ConnectionManager.GetExistingSession())
 
 	uploader := s3manager.NewUploader(conn)
 	uploaderInput := &s3manager.UploadInput{
-		Bucket: aws.String(this.bucketName),
+		Bucket: aws.String(s.bucketName),
 		Key:    aws.String(objectName),
 		Body:   file,
 	}
@@ -39,12 +38,12 @@ func (this *S3Adapter) PostObject(filePath string, objectName string) {
 	defer utils.CloseFile(file)
 }
 
-func (this *S3Adapter) GetObjectUrl(objectName string, urlExpirationHours uint) string {
-	conn := convertAnyToAwsSession(this.ConnectionManager.GetExistingSession())
+func (s *S3Adapter) GetObjectUrl(objectName string, urlExpirationHours uint) string {
+	conn := convertAnyToAwsSession(s.ConnectionManager.GetExistingSession())
 
 	client := s3.New(conn)
 	downloaderInput := &s3.GetObjectInput{
-		Bucket: aws.String(this.bucketName),
+		Bucket: aws.String(s.bucketName),
 		Key:    aws.String(objectName),
 	}
 
@@ -52,8 +51,8 @@ func (this *S3Adapter) GetObjectUrl(objectName string, urlExpirationHours uint) 
 	return createPresignedUrl(downloadRequest, urlExpirationHours)
 }
 
-func (this *S3Adapter) Close() {
-	this.ConnectionManager.Close()
+func (s *S3Adapter) Close() {
+	s.ConnectionManager.Close()
 }
 
 func convertAnyToAwsSession(maybeSession any) *session.Session {
