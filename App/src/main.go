@@ -7,7 +7,10 @@ import (
 )
 
 func main() {
-	rawInput := input.GetUserConfig()
+	rawInput, err := input.GetUserConfig()
+    if err != nil{
+        panic(err)
+    }
 
 	s3Adapter := s3storage.S3Adapter{
 		ConnectionManager: s3storage.FileAuthManager{
@@ -28,7 +31,5 @@ func uploadObject(input input.UserInput, uploader storage.BucketUploader) (strin
 	uploader.InitializeSession(input.BucketName)
 	uploader.PostObject(input.FilePath, input.FileName)
 
-	result := uploader.GetObjectUrl(input.BucketName, input.ObjectLifeTimeInHours)
-
-	return result, nil
+    return uploader.GetObjectUrl(input.BucketName, input.ObjectLifeTimeInHours)
 }

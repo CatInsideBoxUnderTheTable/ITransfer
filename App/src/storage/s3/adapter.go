@@ -1,14 +1,15 @@
 package storage
 
 import (
-	"fmt"
+	"errors"
+	"time"
+
 	"github.com/CatInsideBoxUnderTheTable/ITransfer/utils"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"time"
 )
 
 type S3Adapter struct {
@@ -21,9 +22,13 @@ func (s *S3Adapter) InitializeSession(bucketName string) {
 	s.bucketName = bucketName
 }
 
-func (s *S3Adapter) PostObject(filePath string, objectName string) {
+func (s *S3Adapter) PostObject(filePath string, objectName string) error {
 	file := utils.ReadFile(filePath)
-	conn := convertAnyToAwsSession(s.ConnectionManager.GetExistingSession())
+	
+    conn, err := convertToAwsSession(s.ConnectionManager.GetExistingSession())
+    if err != nil{
+        return err
+    }
 
 	uploader := s3manager.NewUploader(conn)
 	uploaderInput := &s3manager.UploadInput{
@@ -33,13 +38,16 @@ func (s *S3Adapter) PostObject(filePath string, objectName string) {
 	}
 
 	var _, uploadErr = uploader.Upload(uploaderInput)
-	utils.PanicIfErr(uploadErr, fmt.Sprintf("unable to upload %s to s3. INNER ERR: %s", objectName, uploadErr))
 
-	defer utils.CloseFile(file)
+    defer utils.CloseFile(file)
+    return uploadErr 
 }
 
-func (s *S3Adapter) GetObjectUrl(objectName string, urlExpirationHours uint) string {
-	conn := convertAnyToAwsSession(s.ConnectionManager.GetExistingSession())
+func (s *S3Adapter) GetObjectUrl(objectName string, urlExpirationHours uint) (string, error) {
+	conn, err := convertToAwsSession(s.ConnectionManager.GetExistingSession())
+    if err != nil{
+        return "",err
+    }
 
 	client := s3.New(conn)
 	downloaderInput := &s3.GetObjectInput{
@@ -55,20 +63,19 @@ func (s *S3Adapter) Close() {
 	s.ConnectionManager.Close()
 }
 
-func convertAnyToAwsSession(maybeSession any) *session.Session {
+func convertToAwsSession(maybeSession any) (*session.Session, error) {
 	awsSession, isAwsSession := maybeSession.(*session.Session)
 
 	if !isAwsSession {
-		panic("Unable to resolve AWS session")
-	}
+	    return nil, errors.New("Unable to resolve aws session")    
+    }
 
-	return awsSession
+	return awsSession, nil
 }
 
-func createPresignedUrl(downloadRequest *request.Request, expiationTimeInHours uint) string {
-	duration := time.Hour * time.Duration(expiationTimeInHours)
-	downloadUrl, _, downloadUrlErr := downloadRequest.PresignRequest(duration)
-	utils.PanicIfErr(downloadUrlErr, fmt.Sprintf("unable to presign object. INNER ERR: %s", downloadUrlErr))
+func createPresignedUrl(downloadReq *request.Request, expirationTimeHours uint) (string, error) {
+	duration := time.Hour * time.Duration(expirationTimeHours)
+	downloadUrl, _, err := downloadReq.PresignRequest(duration)
 
-	return downloadUrl
+	return downloadUrl, err
 }
