@@ -2,8 +2,8 @@ package storage
 
 type BucketUploader interface {
 	InitializeSession(bucketName string)
-	PostObject(filePath string, objectName string)
-	GetObjectUrl(objectName string, urlExpirationHours uint) string
+	PostObject(filePath string, objectName string)error
+	GetObjectUrl(objectName string, urlExpirationHours uint) (string, error)
 	Close()
 }
 

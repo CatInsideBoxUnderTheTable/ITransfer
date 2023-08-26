@@ -1,10 +1,11 @@
 package input
 
 import (
+	"errors"
 	"flag"
 	"fmt"
-	"github.com/CatInsideBoxUnderTheTable/ITransfer/utils"
 	"os"
+	"path/filepath"
 )
 
 type UserInput struct {
@@ -15,6 +16,7 @@ type UserInput struct {
 	BucketRegion          string
 	AuthFileProfile       string
 }
+
 type userConsoleInput struct {
 	objectLifeTimeInHours uint
 	filePath              string
@@ -27,9 +29,16 @@ type userEnvInput struct {
 	authFileProfile string
 }
 
-func GetUserConfig() UserInput {
-	consoleInput := readInputFromConsole()
-	envInput := readInputFromEnvironment()
+func GetUserConfig() (UserInput, error) {
+	consoleInput, err := readInputFromConsole()
+	if err != nil {
+		return UserInput{}, err
+	}
+
+	envInput, err := readInputFromEnvironment()
+	if err != nil {
+		return UserInput{}, err
+	}
 
 	return UserInput{
 		ObjectLifeTimeInHours: consoleInput.objectLifeTimeInHours,
@@ -38,77 +47,81 @@ func GetUserConfig() UserInput {
 		BucketName:            envInput.bucketName,
 		BucketRegion:          envInput.bucketRegion,
 		AuthFileProfile:       envInput.authFileProfile,
-	}
+	}, nil
 }
 
-func readInputFromConsole() userConsoleInput {
-	validateArgsExisting()
-	filePath := os.Args[len(os.Args)-1]
-	validateFilePath(filePath)
+func readInputFromConsole() (userConsoleInput, error) {
+	if !argsExisting() {
+		return userConsoleInput{}, errors.New("provided console arguments are invalid")
+	}
 
-	defaultFileName := extractFileNameFromPath(filePath)
-	fileName := flag.String("n", defaultFileName, "Define own unique file name. Must be unique in storage")
+	absoluteFilePath, err := filepath.Abs(os.Args[len(os.Args)-1])
+	if err != nil {
+		return userConsoleInput{}, err
+	}
+
+	if err != nil {
+		return userConsoleInput{}, err
+	}
+
+	fileName := flag.String("n", filepath.Base(absoluteFilePath), "Define file name")
 	lifetime := flag.Uint("l", 2, "Define lifespan of link in hours")
 	flag.Parse()
 
-	validateStringNotEmpty(*fileName, "provided filename contains white characters")
-
 	return userConsoleInput{
-		filePath:              filePath,
+		filePath:              absoluteFilePath,
 		fileName:              *fileName,
 		objectLifeTimeInHours: *lifetime,
-	}
+	}, nil
 }
 
-func readInputFromEnvironment() userEnvInput {
-	bucketName := readEnvironmentVariableAsString("AWS_STORAGE_BUCKET_NAME")
-	bucketRegion := readEnvironmentVariableAsString("AWS_STORAGE_BUCKET_REGION")
-	fileAuthProfile := readEnvironmentVariableAsString("AWS_FILE_AUTH_PROFILE")
+func readInputFromEnvironment() (userEnvInput, error) {
+	bucketName, err := readEnvironmentVariableAsString("AWS_STORAGE_BUCKET_NAME")
+	if err != nil {
+		return userEnvInput{}, err
+	}
+
+	bucketRegion, err := readEnvironmentVariableAsString("AWS_STORAGE_BUCKET_REGION")
+	if err != nil {
+		return userEnvInput{}, err
+	}
+
+	fileAuthProfile, err := readEnvironmentVariableAsString("AWS_FILE_AUTH_PROFILE")
+	if err != nil {
+		return userEnvInput{}, err
+	}
 
 	return userEnvInput{
 		bucketName:      bucketName,
 		authFileProfile: fileAuthProfile,
 		bucketRegion:    bucketRegion,
-	}
+	}, nil
 }
 
-func readEnvironmentVariableAsString(envVarName string) string {
+func readEnvironmentVariableAsString(envVarName string) (string, error) {
 	val, exists := os.LookupEnv(envVarName)
 
-	if !exists {
-		panic(fmt.Sprintf("environment variable '%s' not set", envVarName))
+	if !exists || stringEmpty(val) {
+		return "", fmt.Errorf("required environment variable %s is invalid", envVarName)
 	}
-	validateStringNotEmpty(val, fmt.Sprintf("environment variable '%s' is empty", envVarName))
 
-	return val
+	return val, nil
 }
 
-func extractFileNameFromPath(filePath string) string {
-	info, err := os.Stat(filePath)
-	utils.PanicIfErr(err, fmt.Sprintf("Unable to open file. INNER ERR: %s", err))
-
-	return info.Name()
+func argsExisting() bool {
+	return len(os.Args) >= 1
 }
 
-func validateArgsExisting() {
-	if len(os.Args) <= 1 {
-		panic(fmt.Sprintf("Provided invalid number of arguments. No: %d", len(os.Args)))
+func stringEmpty(val string) bool {
+	if len(val) == 0 {
+		return true
 	}
-}
 
-func validateFilePath(filePath string) {
-	info, err := os.Stat(filePath)
-	utils.PanicIfErr(err, fmt.Sprintf("Unable to open file. INNER ERR: %s", err))
-
-	if info.IsDir() {
-		panic("Unable to send directory. Please, compress it first")
-	}
-}
-
-func validateStringNotEmpty(fileName string, errMessage string) {
-	for _, char := range fileName {
-		if char == ' ' {
-			panic(errMessage)
+	for _, char := range val {
+		if char != ' ' {
+			return false
 		}
 	}
+
+	return true
 }
