@@ -19,7 +19,6 @@ func main() {
 		},
 	}
 	tempUrl, err := uploadObject(rawInput, &s3Adapter)
-
 	if err != nil {
 		panic(err)
 	}
