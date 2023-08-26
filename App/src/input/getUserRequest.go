@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"golang.org/x/term"
 	"os"
 	"path/filepath"
 )
@@ -13,7 +14,8 @@ type UserInput struct {
 	FilePath              string
 	FileName              string
 	BucketName            string
-	BucketRegion          string
+	Login                 string
+	Password              string
 	AuthFileProfile       string
 }
 
@@ -21,21 +23,22 @@ type userConsoleInput struct {
 	objectLifeTimeInHours uint
 	filePath              string
 	fileName              string
+	password              string
 }
 
 type userEnvInput struct {
-	bucketName      string
-	bucketRegion    string
-	authFileProfile string
+	bucketName   string
+	bucketRegion string
+	login        string
 }
 
 func GetUserConfig() (UserInput, error) {
-	consoleInput, err := readInputFromConsole()
+	envInput, err := readInputFromEnvironment()
 	if err != nil {
 		return UserInput{}, err
 	}
 
-	envInput, err := readInputFromEnvironment()
+	consoleInput, err := readInputFromConsole()
 	if err != nil {
 		return UserInput{}, err
 	}
@@ -44,9 +47,10 @@ func GetUserConfig() (UserInput, error) {
 		ObjectLifeTimeInHours: consoleInput.objectLifeTimeInHours,
 		FilePath:              consoleInput.filePath,
 		FileName:              consoleInput.fileName,
+		Password:              consoleInput.password,
 		BucketName:            envInput.bucketName,
-		BucketRegion:          envInput.bucketRegion,
-		AuthFileProfile:       envInput.authFileProfile,
+		Login:                 envInput.bucketRegion,
+		AuthFileProfile:       envInput.login,
 	}, nil
 }
 
@@ -60,19 +64,32 @@ func readInputFromConsole() (userConsoleInput, error) {
 		return userConsoleInput{}, err
 	}
 
-	if err != nil {
-		return userConsoleInput{}, err
-	}
-
 	fileName := flag.String("n", filepath.Base(absoluteFilePath), "Define file name")
 	lifetime := flag.Uint("l", 2, "Define lifespan of link in hours")
 	flag.Parse()
+
+	password, err := readPassword()
+	if err != nil {
+		return userConsoleInput{}, err
+	}
 
 	return userConsoleInput{
 		filePath:              absoluteFilePath,
 		fileName:              *fileName,
 		objectLifeTimeInHours: *lifetime,
+		password:              password,
 	}, nil
+}
+
+func readPassword() (string, error) {
+	fmt.Print("provide console password: ")
+	rawPass, err := term.ReadPassword(int(os.Stdin.Fd()))
+	if err != nil {
+		return "", err
+	}
+
+	convertedPass := string(rawPass)
+	return convertedPass, nil
 }
 
 func readInputFromEnvironment() (userEnvInput, error) {
@@ -86,15 +103,15 @@ func readInputFromEnvironment() (userEnvInput, error) {
 		return userEnvInput{}, err
 	}
 
-	fileAuthProfile, err := readEnvironmentVariableAsString("AWS_FILE_AUTH_PROFILE")
+	login, err := readEnvironmentVariableAsString("AWS_CONSOLE_LOGIN")
 	if err != nil {
 		return userEnvInput{}, err
 	}
 
 	return userEnvInput{
-		bucketName:      bucketName,
-		authFileProfile: fileAuthProfile,
-		bucketRegion:    bucketRegion,
+		bucketName:   bucketName,
+		login:        login,
+		bucketRegion: bucketRegion,
 	}, nil
 }
 

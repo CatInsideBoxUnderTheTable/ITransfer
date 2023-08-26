@@ -14,7 +14,7 @@ func main() {
 
 	s3Adapter := s3storage.S3Adapter{
 		ConnectionManager: s3storage.FileAuthManager{
-			Region:      rawInput.BucketRegion,
+			Region:      rawInput.Login,
 			ProfileName: rawInput.AuthFileProfile,
 		},
 	}
