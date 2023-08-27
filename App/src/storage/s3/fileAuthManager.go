@@ -14,7 +14,6 @@ type FileAuthManager struct {
 }
 
 func (f *FileAuthManager) OpenSession() {
-
 	f.session = &session.Options{
 		Config: aws.Config{
 			Region:      aws.String(f.Region),

@@ -16,7 +16,7 @@ func (p *awsPassProvider) Retrieve() (credentials.Value, error) {
 	}, nil
 }
 
-// IsExpired: never expires as this is hardcoded data
+// IsExpired never expires as this is hardcoded data
 func (p *awsPassProvider) IsExpired() bool {
 	return false
 }

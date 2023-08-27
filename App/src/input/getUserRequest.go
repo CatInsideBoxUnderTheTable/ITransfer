@@ -84,6 +84,7 @@ func readInputFromConsole() (userConsoleInput, error) {
 func readPassword() (string, error) {
 	fmt.Print("provide console password: ")
 	rawPass, err := term.ReadPassword(int(os.Stdin.Fd()))
+	fmt.Println()
 	if err != nil {
 		return "", err
 	}

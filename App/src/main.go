@@ -34,5 +34,5 @@ func uploadObject(input input.UserInput, uploader storage.BucketUploader) (strin
 		return "", err
 	}
 
-	return uploader.GetObjectUrl(input.BucketName, input.ObjectLifeTimeInHours)
+	return uploader.GetObjectUrl(input.FileName, input.ObjectLifeTimeInHours)
 }

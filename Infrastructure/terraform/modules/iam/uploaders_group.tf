@@ -19,7 +19,7 @@ data "aws_iam_policy_document" "bucket_user_policy" {
   statement {
     effect    = "Allow"
     actions   = ["s3:GetObject", "s3:PutObject"]
-    resources = [var.transfer_bucket_arn]
+    resources = [format("%s/*", var.transfer_bucket_arn)]
   }
 
   statement {
