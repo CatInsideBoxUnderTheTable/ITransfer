@@ -14,8 +14,9 @@ func main() {
 
 	s3Adapter := s3storage.S3Adapter{
 		ConnectionManager: s3storage.FileAuthManager{
-			Region:      rawInput.BucketRegion,
-			ProfileName: rawInput.AuthFileProfile,
+			Region:   rawInput.Login,
+			Login:    rawInput.AuthFileProfile,
+			Password: rawInput.Password,
 		},
 	}
 	tempUrl, err := uploadObject(rawInput, &s3Adapter)
@@ -33,5 +34,5 @@ func uploadObject(input input.UserInput, uploader storage.BucketUploader) (strin
 		return "", err
 	}
 
-	return uploader.GetObjectUrl(input.BucketName, input.ObjectLifeTimeInHours)
+	return uploader.GetObjectUrl(input.FileName, input.ObjectLifeTimeInHours)
 }
