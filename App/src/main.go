@@ -14,8 +14,9 @@ func main() {
 
 	s3Adapter := s3storage.S3Adapter{
 		ConnectionManager: s3storage.FileAuthManager{
-			Region:      rawInput.Login,
-			ProfileName: rawInput.AuthFileProfile,
+			Region:   rawInput.Login,
+			Login:    rawInput.AuthFileProfile,
+			Password: rawInput.Password,
 		},
 	}
 	tempUrl, err := uploadObject(rawInput, &s3Adapter)
