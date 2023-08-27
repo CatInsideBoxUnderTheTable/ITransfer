@@ -1,5 +1,12 @@
 # ITRANSFER
 
+## WHAT THIS SOLUTION DO
+
+This app spawns your own aws infrastructure(your tweaks still required) with s3 bucket.
+It also provides console application that allows you to upload file to created s3 bucket and
+generate presigned URL. In simple words, this solution works like your own `wetransfer.com` page.
+More information about how to use this app you can find in further sections.
+
 ## WHY YOU CREATED THIS?
 
 There were a couple of reasons:
