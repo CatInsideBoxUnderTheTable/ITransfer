@@ -24,7 +24,7 @@ data "aws_iam_policy_document" "bucket_user_policy" {
 
   statement {
     effect    = "Allow"
-    actions   = ["kms:Decrypt", "kms:Encrypt"]
+    actions   = ["kms:Decrypt", "kms:Encrypt", "kms:GenerateDataKey"]
     resources = [var.transfer_bucket_encryption_key_arn]
   }
 }
