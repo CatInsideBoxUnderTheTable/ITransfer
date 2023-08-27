@@ -5,5 +5,5 @@ module "transfer_bucket" {
   default_tags = var.default_tags
 
   bucket_object_lifetime = 3
-  environment_name = var.environment_name
+  environment_name       = var.environment_name
 }
