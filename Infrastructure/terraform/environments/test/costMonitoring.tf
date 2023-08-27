@@ -10,10 +10,4 @@ module "cost_monitoring" {
   overall_spending_monitoring = {
     maxAllowedPriceInUsd = 20
   }
-
-  tracked_bucket_usage_monitoring = {
-    tagKey             = "purpose"
-    tagValue           = "transferredFilesStorage"
-    maxAllowedSizeInGb = 10
-  }
 }
