@@ -6,6 +6,7 @@ This infrastructure spawns:
 - state management resources
 - required group and user with the least privileges
 - s3 bucket with blocked public access and KMS encryption
+- automatic stale objects deletion
 - monitoring utilities(like spending alarms and so on)
 
 ## STATE MANAGEMENT

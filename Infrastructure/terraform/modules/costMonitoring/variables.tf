@@ -15,16 +15,6 @@ variable "notification_receiver" {
   description = "Email address of person which will receive notifications"
 }
 
-variable "tracked_bucket_usage_monitoring" {
-  type = object(
-    {
-      tagKey = string,
-      tagValue = string,
-      maxAllowedSizeInGb =number
-    }
-  )
-}
-
 variable "overall_spending_monitoring" {
   type = object(
     {
